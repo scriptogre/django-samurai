@@ -4,6 +4,9 @@ version = "0.1.0"
 description = "Integrated views and templates, type-safe templates, and file-based routing for HTMX developers with deadlines."
 authors = ["Christian Tanul <contact@tanulchristian.dev>"]
 readme = "README.md"
+packages = [
+    { include = "samurai" },
+]
 
 [tool.poetry.dependencies]
 python = "^3.12"
