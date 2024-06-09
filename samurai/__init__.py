@@ -19,7 +19,7 @@ DISALLOWED_CHARS = re.compile(
         ]
     )
 )
-TO_DASH = re.compile("[/_]")  # Slash and dash
+TO_UNDERSCORES = re.compile("[/-]")  # Slash and dash
 
 
 def file_patterns(start_dir: str, append_slash: bool = False, exclude: str = ""):
@@ -103,7 +103,7 @@ def get_url_name(view_fn, url):
     """
     url_name = getattr(view_fn, "urlname", "")
     if not url_name:
-        url_name = DISALLOWED_CHARS.sub("", TO_DASH.sub("_", url))
+        url_name = DISALLOWED_CHARS.sub("", TO_UNDERSCORES.sub("_", url))
     return url_name
 
 
