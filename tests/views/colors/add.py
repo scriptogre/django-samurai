@@ -7,9 +7,3 @@
     <input type="submit">
 </form>
 """
-
-from samurai import render_str
-
-
-def view(request):
-    return render_str(__doc__, request)

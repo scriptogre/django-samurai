@@ -3,7 +3,7 @@ import re
 from importlib import import_module
 
 from django.http import HttpResponse
-from django.template import RequestContext
+from django.template import RequestContext, Context
 from django.template.base import Template
 from django.urls import path
 
@@ -37,10 +37,12 @@ def file_patterns(start_dir: str, append_slash: bool = False, exclude: str = "")
         module_path = get_module_path(file)
         module = import_module(module_path)
         context = get_members(module)
-        view_fn = render_response(module, context=context)
+        view_fn = render_response
+        view_fn.module = module
+        view_fn.context = context
 
         url = get_url(file, start_dir_re, append_slash, view_fn)
-        url_name = get_url_name(view_fn, url)
+        url_name = get_url_name(url)
 
         patterns.append(path(url, view_fn, name=url_name))
 
@@ -87,22 +89,27 @@ def get_url(file: pathlib.Path, start_dir_re: re.Pattern, append_slash: bool, vi
     """
     Get the URL for the file
     """
+
     url = getattr(view_fn, "url", "")
     if not url:
-        url = "" if file.name == "__init__.py" else file.name.replace(".py", "")
-        url = start_dir_re.sub("", f"{file.parent}/{url}").strip("/")
-        url = (url + "/") if append_slash and url != "" else url
-    return url
+        if file.name == "__init__.py" and file.parent.name == "views":
+            url = ""
+        elif file.name == "__init__.py":
+            url = file.parent.name
+        else:
+            url = start_dir_re.sub("", f"{file.parent}/{file.stem}").strip("/")
+
+    return url + "/" if append_slash else url
 
 
-def get_url_name(view_fn, url):
+def get_url_name(url):
     """
     Get the URL name for the view function
     """
-    url_name = getattr(view_fn, "urlname", "")
-    if not url_name:
-        url_name = DISALLOWED_CHARS.sub("", TO_UNDERSCORES.sub("_", url))
-    return url_name
+    if not url or url == "/":
+        return "index"
+
+    return DISALLOWED_CHARS.sub("", TO_UNDERSCORES.sub("_", url))
 
 
 def render_str(source, request, context=None):
@@ -130,5 +137,5 @@ def render_response(module, context=None) -> HttpResponse:
         return HttpResponse(status=204)
     response = HttpResponse()
     template = Template(template_str)
-    response.content = template.render(context)
+    response.content = template.render(Context(context))
     return response
