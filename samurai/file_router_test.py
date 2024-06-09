@@ -8,7 +8,7 @@ from . import file_patterns
 @pytest.fixture(scope="session", autouse=True)
 def copy_views():
     """Copy the views folder of the demo_project project to this folder"""
-    shutil.copytree("demo_project/demo_project/views", "views")
+    shutil.copytree("tests/demo_project/demo/views", "views")
     yield
     shutil.rmtree("views")
 
