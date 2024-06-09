@@ -36,10 +36,8 @@ def file_patterns(start_dir: str, append_slash: bool = False, exclude: str = "")
 
         module_path = get_module_path(file)
         module = import_module(module_path)
-        view_fn = get_view_fn(module)
-
-        if not is_callable(view_fn):
-            continue
+        context = get_members(module)
+        view_fn = render_response(module, context=context)
 
         url = get_url(file, start_dir_re, append_slash, view_fn)
         url_name = get_url_name(view_fn, url)
@@ -113,3 +111,24 @@ def render_str(source, request, context=None):
     """
     rendered = Template(source).render(RequestContext(request, context))
     return HttpResponse(rendered)
+
+
+def get_members(module) -> dict[str, str]:
+    """
+    Return all members of a module.
+    """
+    members = {name: getattr(module, name) for name in dir(module)}
+    return members
+
+
+def render_response(module, context=None) -> HttpResponse:
+    """
+    Take a module and render the template with its docs.
+    """
+    template_str = module.__doc__.strip()
+    if not template_str:
+        return HttpResponse(status=204)
+    response = HttpResponse()
+    template = Template(template_str)
+    response.content = template.render(context)
+    return response
