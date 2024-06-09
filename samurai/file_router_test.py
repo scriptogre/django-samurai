@@ -19,9 +19,7 @@ def test_append_slash():
     assert output == [
         ("current-time/", "current_time"),
         ("colors/add/", "colors_add"),
-        ("colors/", "colors"),
         ("colors/<slug:slug>/", "colors_slug"),
-        ("", "home"),
     ]
 
 
