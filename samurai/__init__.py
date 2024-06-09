@@ -19,7 +19,7 @@ DISALLOWED_CHARS = re.compile(
         ]
     )
 )
-TO_UNDERSCORES = re.compile("[/-]")  # Slash and dash
+TO_DASH = re.compile("[/_]")  # Slash and dash
 
 
 def file_patterns(start_dir: str, append_slash: bool = False, exclude: str = ""):
@@ -28,7 +28,7 @@ def file_patterns(start_dir: str, append_slash: bool = False, exclude: str = "")
     """
     patterns = []
     start_dir_re = re.compile(f"^{start_dir}")
-    files = get_files(start_dir, exclude)
+    files = get_files(start_dir)
 
     for file in files:
         if exclude_file(file, exclude):
@@ -42,14 +42,14 @@ def file_patterns(start_dir: str, append_slash: bool = False, exclude: str = "")
             continue
 
         url = get_url(file, start_dir_re, append_slash, view_fn)
-        urlname = get_urlname(view_fn, url)
+        url_name = get_url_name(view_fn, url)
 
-        patterns.append(path(url, view_fn, name=urlname))
+        patterns.append(path(url, view_fn, name=url_name))
 
     return patterns
 
 
-def get_files(start_dir: str, exclude: str):
+def get_files(start_dir: str):
     """
     Get a list of files in the directory structure
     """
@@ -97,14 +97,14 @@ def get_url(file: pathlib.Path, start_dir_re: re.Pattern, append_slash: bool, vi
     return url
 
 
-def get_urlname(view_fn, url):
+def get_url_name(view_fn, url):
     """
     Get the URL name for the view function
     """
-    urlname = getattr(view_fn, "urlname", "")
-    if not urlname:
-        urlname = DISALLOWED_CHARS.sub("", TO_UNDERSCORES.sub("_", url))
-    return urlname
+    url_name = getattr(view_fn, "urlname", "")
+    if not url_name:
+        url_name = DISALLOWED_CHARS.sub("", TO_DASH.sub("_", url))
+    return url_name
 
 
 def render_str(source, request, context=None):
