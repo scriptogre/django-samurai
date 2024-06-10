@@ -144,8 +144,13 @@ def render_response(module, context=None) -> HttpResponse:
     if not template_str:
         return HttpResponse(status=204)
 
-    # Render the template string
+    # Create a response object
     response = HttpResponse()
-    template_str = Template(template_str)
-    response.content = template_str.render(Context(context))
+
+    # Create a template object
+    template = Template(template_str)
+
+    # Set the response content to the rendered template
+    response.content = template.render(Context(context))
+
     return response
