@@ -132,9 +132,12 @@ def render_response(module, context=None) -> HttpResponse:
     """
     Take a module and render the template with its docs.
     """
-    template_str = module.__doc__.strip()
-    if not template_str:
+    try:
+        template_str = module.template
+        print(template_str)
+    except AttributeError:
         return HttpResponse(status=204)
+
     response = HttpResponse()
     template = Template(template_str)
     response.content = template.render(Context(context))

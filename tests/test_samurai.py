@@ -40,7 +40,6 @@ def test_get_url():
 
 def test_append_slash():
     patterns = file_patterns("tests/views", append_slash=True, exclude="")
-    print(patterns)
     output = [(str(p.pattern), p.name) for p in patterns]
     assert output == [
         ("current_time/", "current_time"),
