@@ -1,6 +1,6 @@
 import re
 
-from samurai import get_files, exclude_file, get_module_path, get_url, file_patterns
+from samurai import get_files, exclude_file, get_module_path, get_url, file_patterns, extract_template_string
 
 
 def test_get_files():
@@ -40,7 +40,6 @@ def test_get_url():
 
 def test_append_slash():
     patterns = file_patterns("tests/views", append_slash=True, exclude="")
-    print(patterns)
     output = [(str(p.pattern), p.name) for p in patterns]
     assert output == [
         ("current_time/", "current_time"),
@@ -60,3 +59,21 @@ def test_exclude_path():
         ("colors/<slug:slug>", "colors_slug"),
         ("", "index"),
     ]
+
+
+def test_extract_template_string():
+    """Test extracting template string from a module"""
+    source_code = """
+if True:
+    print("This is the view logic.")
+
+\"\"\"
+<div id="colors">
+    <h1>colors</h1>
+    <p>{{ message }}</p>
+</div>
+\"\"\"
+"""
+
+    template_string = extract_template_string(source_code)
+    assert template_string == "<div id=\"colors\">\n    <h1>colors</h1>\n    <p>{{ message }}</p>\n</div>"
