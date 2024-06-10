@@ -1,3 +1,4 @@
+import inspect
 import pathlib
 import re
 from importlib import import_module
@@ -71,20 +72,6 @@ def get_module_path(file: pathlib.Path):
     return str(file).replace(".py", "").replace("/", ".")
 
 
-def get_view_fn(module):
-    """
-    Get the view function from the module
-    """
-    return getattr(module, "view", None)
-
-
-def is_callable(fn):
-    """
-    Check if a function is callable
-    """
-    return callable(fn)
-
-
 def get_url(file: pathlib.Path, start_dir_re: re.Pattern, append_slash: bool, view_fn):
     """
     Get the URL for the file
@@ -99,7 +86,10 @@ def get_url(file: pathlib.Path, start_dir_re: re.Pattern, append_slash: bool, vi
         else:
             url = start_dir_re.sub("", f"{file.parent}/{file.stem}").strip("/")
 
-    return url + "/" if append_slash else url
+    if append_slash:
+        url += "/"
+
+    return url
 
 
 def get_url_name(url):
@@ -128,14 +118,34 @@ def get_members(module) -> dict[str, str]:
     return members
 
 
+def extract_template_string(source_code: str) -> None | str:
+    # Regular expression to find triple-quoted strings
+    triple_quote_pattern = r'\"\"\"(.*?)\"\"\"|\'\'\'(.*?)\'\'\''
+    matches = re.findall(triple_quote_pattern, source_code, re.DOTALL)
+
+    # Assuming the template string is the last triple-quoted string in the source code
+    if matches:
+        template_string = matches[-1][0] if matches[-1][0] else matches[-1][1]
+        return template_string.strip()
+    return None
+
+
 def render_response(module, context=None) -> HttpResponse:
     """
-    Take a module and render the template with its docs.
+    Take a module and render the template string in the module
     """
-    template_str = module.__doc__.strip()
+    # Get the module's source code
+    source_code = inspect.getsource(module)
+
+    # Extract the template string from the source code
+    template_str = extract_template_string(source_code)
+
+    # Empty response if no template
     if not template_str:
         return HttpResponse(status=204)
+
+    # Render the template string
     response = HttpResponse()
-    template = Template(template_str)
-    response.content = template.render(Context(context))
+    template_str = Template(template_str)
+    response.content = template_str.render(Context(context))
     return response
