@@ -1,6 +1,8 @@
 import re
+from importlib import import_module
 
-from samurai import get_files, exclude_file, get_module_path, get_url, file_patterns
+from samurai import get_files, exclude_file, get_module_path, get_url, file_patterns, \
+    render_response
 
 
 def test_get_files():
@@ -36,6 +38,15 @@ def test_get_url():
     start_dir_re = re.compile("^tests/views")
     url = get_url(file, start_dir_re, append_slash=False, view_fn="view_fn")
     assert url == "colors/add"
+
+
+def test_render_response():
+    """Test render response function"""
+    module_path = "tests.views"
+    module = import_module(module_path)
+    response = render_response(module, None)
+    assert response is not None
+    assert response.status_code == 200
 
 
 def test_append_slash():
