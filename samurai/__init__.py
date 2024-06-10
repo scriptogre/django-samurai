@@ -134,7 +134,6 @@ def render_response(module, context=None) -> HttpResponse:
     """
     try:
         template_str = module.template
-        print(template_str)
     except AttributeError:
         return HttpResponse(status=204)
 
