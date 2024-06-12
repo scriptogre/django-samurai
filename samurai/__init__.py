@@ -14,7 +14,7 @@ DISALLOWED_CHARS = re.compile(
         [
             r"^_+",  # Leading underscores
             r"[<>]",  # Angle brackets (url param wrapper)
-            r"\w+\:",  # Letters followed by colon (path converters)
+            r"\w+\:",  # Letters followed by a colon (path converters)
             r"_+$",  # Trailing underscores
         ]
     )
@@ -39,6 +39,7 @@ def file_patterns(start_dir: str, append_slash: bool = False, exclude: str = "")
         context = get_members(module)
 
         def view_fn(request, view_module=module, view_context=context):
+            view_module.request = request
             return render_response(request, view_module, view_context)
 
         url = get_url(file, start_dir_re, append_slash, view_fn)
@@ -126,6 +127,7 @@ def get_members(module) -> dict[str, str]:
         "__package__",
         "__spec__",
         "template",
+        "request",
     ]
     members = {
         name: getattr(module, name)
@@ -139,6 +141,10 @@ def render_response(request, module, context) -> HttpResponse:
     """
     Take a module and render the template with its docs.
     """
+    # inject request into module
+    module.request = request
+
+    # get the template and render it
     template_str = module.template
     response = HttpResponse()
     template = Template(template_str)
