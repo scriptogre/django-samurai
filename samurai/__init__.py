@@ -116,7 +116,22 @@ def get_members(module) -> dict[str, str]:
     """
     Return all members of a module.
     """
-    members = {name: getattr(module, name) for name in dir(module)}
+    excluded_members = [
+        "__builtins__",
+        "__cached__",
+        "__doc__",
+        "__file__",
+        "__loader__",
+        "__name__",
+        "__package__",
+        "__spec__",
+        "template",
+    ]
+    members = {
+        name: getattr(module, name)
+        for name in dir(module)
+        if name not in excluded_members
+    }
     return members
 
 
