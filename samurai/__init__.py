@@ -59,7 +59,7 @@ def get_files(start_dir: str):
 
 def exclude_file(file: pathlib.Path, exclude: str):
     """
-    Check if a file should be excluded
+    Check if a file match excluded
     """
     return exclude and pathlib.Path.match(file, exclude)
 
