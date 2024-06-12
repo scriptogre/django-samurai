@@ -39,7 +39,10 @@ def file_patterns(start_dir: str, append_slash: bool = False, exclude: str = "")
         context = get_members(module)
 
         def view_fn(request, view_module=module, view_context=context):
-            view_module.request = request
+            if request.method == "GET" and hasattr(view_module, "get"):
+                return view_module.get(request)
+            if request.method == "POST" and hasattr(view_module, "post"):
+                return view_module.post(request)
             return render_response(request, view_module, view_context)
 
         url = get_url(file, start_dir_re, append_slash, view_fn)
