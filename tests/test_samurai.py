@@ -1,6 +1,8 @@
 import re
 from importlib import import_module
 
+from django.http import HttpRequest
+
 from samurai import get_files, exclude_file, get_module_path, get_url, file_patterns, \
     render_response
 
@@ -44,7 +46,8 @@ def test_render_response():
     """Test render response function"""
     module_path = "tests.views"
     module = import_module(module_path)
-    response = render_response(module, None)
+    request = HttpRequest()
+    response = render_response(request, module, {})
     assert response is not None
     assert response.status_code == 200
 

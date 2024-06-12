@@ -37,9 +37,9 @@ def file_patterns(start_dir: str, append_slash: bool = False, exclude: str = "")
         module_path = get_module_path(file)
         module = import_module(module_path)
         context = get_members(module)
-        view_fn = render_response
-        view_fn.module = module
-        view_fn.context = context
+
+        def view_fn(request, view_module=module, view_context=context):
+            return render_response(request, view_module, view_context)
 
         url = get_url(file, start_dir_re, append_slash, view_fn)
         url_name = get_url_name(url)
@@ -128,15 +128,15 @@ def get_members(module) -> dict[str, str]:
     return members
 
 
-def render_response(module, context=None) -> HttpResponse:
+def render_response(request, module, context) -> HttpResponse:
     """
     Take a module and render the template with its docs.
     """
-    try:
-        template_str = module.template
-    except AttributeError:
-        return HttpResponse(status=204)
-
+    # try:
+    template_str = module.template
+    # except AttributeError:
+    #     return HttpResponse(status=204)
+    print(template_str)
     response = HttpResponse()
     template = Template(template_str)
     response.content = template.render(Context(context))
