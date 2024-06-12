@@ -3,7 +3,7 @@ import re
 from importlib import import_module
 
 from django.http import HttpResponse
-from django.template import RequestContext, Context
+from django.template import Context
 from django.template.base import Template
 from django.urls import path
 
@@ -110,14 +110,6 @@ def get_url_name(url):
         return "index"
 
     return DISALLOWED_CHARS.sub("", TO_UNDERSCORES.sub("_", url))
-
-
-def render_str(source, request, context=None):
-    """
-    Take a string and respond with a fully rendered template
-    """
-    rendered = Template(source).render(RequestContext(request, context))
-    return HttpResponse(rendered)
 
 
 def get_members(module) -> dict[str, str]:
