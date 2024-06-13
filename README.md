@@ -44,9 +44,8 @@ def add_user_message_view(request):
     return render(request, context, headers=headers)
 ```
 
-```html
 ## template
-
+```html
     <div class="chat-message">
         <span>{{ message }}</span>
     </div>
