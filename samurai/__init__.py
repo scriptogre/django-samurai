@@ -3,7 +3,7 @@ import re
 from importlib import import_module
 
 from django.http import HttpResponse
-from django.template import RequestContext, Context
+from django.template import Context
 from django.template.base import Template
 from django.urls import path
 
@@ -14,7 +14,7 @@ DISALLOWED_CHARS = re.compile(
         [
             r"^_+",  # Leading underscores
             r"[<>]",  # Angle brackets (url param wrapper)
-            r"\w+\:",  # Letters followed by colon (path converters)
+            r"\w+\:",  # Letters followed by a colon (path converters)
             r"_+$",  # Trailing underscores
         ]
     )
@@ -37,9 +37,13 @@ def file_patterns(start_dir: str, append_slash: bool = False, exclude: str = "")
         module_path = get_module_path(file)
         module = import_module(module_path)
         context = get_members(module)
-        view_fn = render_response
-        view_fn.module = module
-        view_fn.context = context
+
+        def view_fn(request, view_module=module, view_context=context):
+            if request.method == "GET" and hasattr(view_module, "get"):
+                return view_module.get(request)
+            if request.method == "POST" and hasattr(view_module, "post"):
+                return view_module.post(request)
+            return render_response(request, view_module, view_context)
 
         url = get_url(file, start_dir_re, append_slash, view_fn)
         url_name = get_url_name(url)
@@ -59,7 +63,7 @@ def get_files(start_dir: str):
 
 def exclude_file(file: pathlib.Path, exclude: str):
     """
-    Check if a file should be excluded
+    Check if a file match excluded
     """
     return exclude and pathlib.Path.match(file, exclude)
 
@@ -112,29 +116,39 @@ def get_url_name(url):
     return DISALLOWED_CHARS.sub("", TO_UNDERSCORES.sub("_", url))
 
 
-def render_str(source, request, context=None):
-    """
-    Take a string and respond with a fully rendered template
-    """
-    rendered = Template(source).render(RequestContext(request, context))
-    return HttpResponse(rendered)
-
-
 def get_members(module) -> dict[str, str]:
     """
     Return all members of a module.
     """
-    members = {name: getattr(module, name) for name in dir(module)}
+    excluded_members = [
+        "__builtins__",
+        "__cached__",
+        "__doc__",
+        "__file__",
+        "__loader__",
+        "__name__",
+        "__package__",
+        "__spec__",
+        "template",
+        "request",
+    ]
+    members = {
+        name: getattr(module, name)
+        for name in dir(module)
+        if name not in excluded_members
+    }
     return members
 
 
-def render_response(module, context=None) -> HttpResponse:
+def render_response(request, module, context) -> HttpResponse:
     """
     Take a module and render the template with its docs.
     """
-    template_str = module.__doc__.strip()
-    if not template_str:
-        return HttpResponse(status=204)
+    # inject request into module
+    module.request = request
+
+    # get the template and render it
+    template_str = module.template
     response = HttpResponse()
     template = Template(template_str)
     response.content = template.render(Context(context))
