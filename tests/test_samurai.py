@@ -1,6 +1,10 @@
 import re
+from importlib import import_module
 
-from samurai import get_files, exclude_file, get_module_path, get_url, file_patterns
+from django.http import HttpRequest
+
+from samurai import get_files, exclude_file, get_module_path, get_url, file_patterns, \
+    render_response
 
 
 def test_get_files():
@@ -38,9 +42,18 @@ def test_get_url():
     assert url == "colors/add"
 
 
+def test_render_response():
+    """Test render response function"""
+    module_path = "tests.views"
+    module = import_module(module_path)
+    request = HttpRequest()
+    response = render_response(request, module, {})
+    assert response is not None
+    assert response.status_code == 200
+
+
 def test_append_slash():
     patterns = file_patterns("tests/views", append_slash=True, exclude="")
-    print(patterns)
     output = [(str(p.pattern), p.name) for p in patterns]
     assert output == [
         ("current_time/", "current_time"),
